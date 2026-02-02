@@ -1,0 +1,8 @@
+#START
+
+import random
+
+
+
+
+#STOP
