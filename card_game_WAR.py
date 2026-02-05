@@ -1,6 +1,7 @@
 #START
 
 import random
+import time
 
 player_score = 0
 computer_score = 0
@@ -31,5 +32,7 @@ while True:
     if computer_score == 10:
         print("Computer win!")
         break
+
+    time.sleep(2)
 
 #STOP

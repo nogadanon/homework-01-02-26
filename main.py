@@ -1,79 +1,163 @@
 #START
-
-# להוסיף מספר תורים שווה לשני שחקנים
-
-
 import random
 
-ans = True
-ans_1 = True
-i = 1
-x = 1
-_sum1 = 0
-_sum2 = 0
+ranks = [
+    ("2", 2), ("3", 3), ("4", 4), ("5", 5), ("6", 6),
+    ("7", 7), ("8", 8), ("9", 9), ("10", 10),
+    ("J", 10), ("Q", 10), ("K", 10), ("A", 11)
+]
 
-while True:
-    # take a card
-    suit = random.choice(["❤️", "♦️", "♣️", "♠️"])
-    card = random.choice([2, 3, 4, 5, 6, 7, 8, 9, 10, 'J', 'Q', 'K', 'A'])
-    print(suit, card)
+suits = ["spades", "hearts", "diamonds", "clubs"]
 
-    card = (10 if card == "J" or card == "Q" or card == "K" else card)
-    card = (1 if card == "A" else card)
+def create_shoe():
+    shoe = []
+    for _ in range(2):
+        for rank, value in ranks:
+            for suit in suits:
+                shoe.append((rank, f"{rank} {suit}", value))
+    random.shuffle(shoe)
+    return shoe
 
-    if x % 2 != 0: # player 1
-        _sum1 += card # Calculating amounts
+shoe = create_shoe()
 
-        # win / lose
-        if _sum1 == 21:
-            print("Player's 1 sum is 21 ! Player 1 win!")
-            break  # no 'break' fair game
-        if _sum1 > 21:
-            print("Player's 1 total is", _sum1, 'Player 1 disqualified')
-            break
+def draw_card():
+    global shoe
+    if len(shoe) == 0:
+        print("\nDealer shuffle cards")
+        shoe = create_shoe()
+    return shoe.pop()
 
-        # print sum
-        if i >= 2 or x > 2:
-            print("Player's 1 sum: ", _sum1)
+def calculate_total(values):
+    total = sum(values)
+    aces = values.count(11)
 
-            # Player selection question
-            player_input:str = input('Want another card? Answer yes/no only').lower()
-            ans = player_input == 'yes'
+    while total > 21 and aces > 0:
+        total -= 10
+        aces -= 1
 
-            # change turn
-        if ans == False:
-            print('change turn')
-            x += 1
-            i = 1
+    return total
+
+def is_soft_hand(values):
+    return 11 in values and calculate_total(values) <= 21
+
+def is_blackjack(names, values):
+    return len(values) == 2 and "A" in names and calculate_total(values) == 21
+
+def player_turn(hand, names, values):
+    while True:
+        total = calculate_total(values)
+        print("\nPlayer hand:", " ".join(hand))
+        print("Total:", total)
+
+        if total > 21:
+            print("Player BUST")
+            return total, True
+
+        choice = input("Choose:\n0 = STAND\n1 = HIT\nYour choice: ")
+
+        if choice == "0":
+            return total, False
+
+        if choice == "1":
+            name, card, value = draw_card()
+            hand.append(card)
+            names.append(name)
+            values.append(value)
         else:
-            i += 1
+            print("Invalid choice")
 
-    else:  # player 2
-        ans = True    #reset answer
-        _sum2 += card
-        if _sum2 == 21:
-            print("Player's 2 sum is 21 ! Player 2 win!")
-            break
-        if _sum2 > 21:
-            print("Player's 2 total is",_sum2, "Player 2 disqualified")
-            break
-        if i >= 2 or x > 2:
-            print("Player's 2 sum: ", _sum2)
-            player_input = input('Want another card? Answer yes/no only').lower()
-            ans = player_input == 'yes'
-        if ans == False:
-            print('change turn')
-            x += 1
-            i = 1
+def dealer_turn(hand, names, values):
+    while True:
+        total = calculate_total(values)
+
+        if total < 17:
+            name, card, value = draw_card()
+            hand.append(card)
+            names.append(name)
+            values.append(value)
+
+        elif total == 17 and is_soft_hand(values):
+            name, card, value = draw_card()
+            hand.append(card)
+            names.append(name)
+            values.append(value)
+
         else:
-            i += 1
-            if
+            return total
 
-    if _sum1 == _sum2:
-        print('*draw* both players total is equal')
+coins = 100
 
+while coins > 0:
+    print("\nCoins:", coins)
+    bet = int(input("Enter bet amount: "))
 
+    if bet <= 0 or bet > coins:
+        print("Invalid bet")
+        continue
 
+    player_hand = []
+    player_names = []
+    player_values = []
+
+    dealer_hand = []
+    dealer_names = []
+    dealer_values = []
+
+    for _ in range(2):
+        name, card, value = draw_card()
+        player_hand.append(card)
+        player_names.append(name)
+        player_values.append(value)
+
+        name, card, value = draw_card()
+        dealer_hand.append(card)
+        dealer_names.append(name)
+        dealer_values.append(value)
+
+    print("\nDealer shows:", dealer_hand[0])
+
+    if is_blackjack(player_names, player_values):
+        print("Player hand:", " ".join(player_hand))
+        print("BLACKJACK")
+        win = int(bet * 1.5)
+        coins += win
+        print("Player WINS")
+        print("You win", win, "coins")
+        continue
+
+    player_total, player_bust = player_turn(
+        player_hand, player_names, player_values
+    )
+
+    if player_bust:
+        coins -= bet
+        print("Dealer WINS")
+        print("You lose", bet, "coins")
+        continue
+
+    dealer_total = dealer_turn(
+        dealer_hand, dealer_names, dealer_values
+    )
+
+    print("\nDealer hand:", " ".join(dealer_hand))
+    print("Dealer total:", dealer_total)
+
+    if dealer_total > 21:
+        print("Dealer BUST")
+        print("Player WINS")
+        coins += bet
+    elif dealer_total > player_total:
+        print("Dealer WINS")
+        coins -= bet
+    elif dealer_total < player_total:
+        print("Player WINS")
+        coins += bet
+    else:
+        print("PUSH")
+
+    if coins <= 0:
+        print("Game over – no coins left")
+        break
 
 
 

@@ -17,7 +17,7 @@ while True:
         ans = player_input == 'yes'
 
         # change turn
-        if ans == False:
+        if  not ans:
             if x % 2 != 0: # player 1
                 print("Player's 2 turn:")
             else: print("Player's 1 turn:")  # Player 2
@@ -28,7 +28,7 @@ while True:
             if x > 2:
                 player_input: int = input('Want another card? Answer yes/no only').lower()
                 ans_1 = player_input == 'yes'
-                if ans_1 == False:
+                if not ans_1:
                     if _sum1 > _sum2:
                         print('Player 1 win with total:', _sum1)
                         game_over = 1
@@ -43,7 +43,7 @@ while True:
         else:
             break
 
-    if ans_1 == True or ans == True:
+    if ans_1 or ans:
         # take a card
         suit = random.choice(["❤️", "♦️", "♣️", "♠️"])
         card = random.choice([2, 3, 4, 5, 6, 7, 8, 9, 10, 'J', 'Q', 'K', 'A'])
